@@ -1,0 +1,60 @@
+name: Local Build SayAll
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: local-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          ls -d /Applications/Xcode*.app || true
+          xcodebuild -version
+          swift --version
+
+      - name: Build app (official script, ad-hoc signed, no private packages)
+        run: ./scripts/build-app.sh
+
+      - name: Verify app bundle
+        run: |
+          ls -la dist/SayAll.app/Contents/MacOS/
+          plutil -p dist/SayAll.app/Contents/Info.plist | grep -E "ShortVersion|CFBundleVersion"
+          codesign -dv dist/SayAll.app 2>&1 | head -5
+
+      - name: Zip app
+        run: |
+          cd dist
+          ditto -c -k --keepParent SayAll.app SayAll.zip
+          ls -la SayAll.zip
+
+      - name: Push artifact to build-output branch
+        run: |
+          git config user.name "sayall-local-build"
+          git config user.email "sayall-local-build@users.noreply.github.com"
+          git fetch origin build-output --depth 1 || true
+          if git rev-parse --verify origin/build-output >/dev/null 2>&1; then
+            git checkout --detach origin/build-output
+            rm -rf ./* .github 2>/dev/null || true
+          else
+            git checkout --orphan build-output
+            git rm -rf . || true
+          fi
+          cp -R "${GITHUB_WORKSPACE}/dist/SayAll.zip" ./
+          cp -R "${GITHUB_WORKSPACE}/dist/SayAll.app/Contents/Info.plist" ./version-info.plist || true
+          git add -A
+          git commit -m "SayAll.app build from ${GITHUB_SHA}"
+          git push origin build-output
