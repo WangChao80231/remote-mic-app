@@ -42,6 +42,8 @@ jobs:
           ls -la SayAll.zip
 
       - name: Push artifact to build-output branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           rm -rf /tmp/artifact-repo
           if ! git clone --depth 1 --branch build-output "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/artifact-repo 2>/dev/null; then
