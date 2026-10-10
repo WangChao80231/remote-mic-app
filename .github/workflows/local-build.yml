@@ -43,20 +43,18 @@ jobs:
 
       - name: Push artifact to build-output branch
         run: |
-          cp -R "${GITHUB_WORKSPACE}/dist/SayAll.zip" /tmp/SayAll.zip
+          rm -rf /tmp/artifact-repo
+          if ! git clone --depth 1 --branch build-output "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/artifact-repo 2>/dev/null; then
+            git init -b build-output /tmp/artifact-repo
+            cd /tmp/artifact-repo
+            git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
+          cd /tmp/artifact-repo
           git config user.name "sayall-local-build"
           git config user.email "sayall-local-build@users.noreply.github.com"
-          git fetch origin build-output --depth 1 || true
-          if git rev-parse --verify origin/build-output >/dev/null 2>&1; then
-            git checkout --detach origin/build-output
-            git rm -rf . || true
-            rm -f SayAll.zip version-info.plist
-          else
-            git checkout --orphan build-output
-            git rm -rf . || true
-          fi
-          cp /tmp/SayAll.zip ./
-          cp -R "${GITHUB_WORKSPACE}/dist/SayAll.app/Contents/Info.plist" ./version-info.plist || true
-          git add -A
-          git commit -m "SayAll.app build from ${GITHUB_SHA}"
+          rm -f SayAll.zip version-info.plist
+          cp "${GITHUB_WORKSPACE}/dist/SayAll.zip" ./
+          cp "${GITHUB_WORKSPACE}/dist/SayAll.app/Contents/Info.plist" ./version-info.plist
+          git add SayAll.zip version-info.plist
+          git commit -m "SayAll.app build from ${GITHUB_SHA}" || echo "no changes to commit"
           git push origin build-output
