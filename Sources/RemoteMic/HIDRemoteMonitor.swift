@@ -788,13 +788,15 @@ final class HIDRemoteMonitor {
                     "HID GESTURE button=\(button.rawValue) trigger=singleClick path=raw"
                 )
                 guard performConfiguredAction(for: button, trigger: .singleClick) else { return }
-                if !hasSingleClickOverride {
-                    startRepeatIfNeeded(
-                        usage: usage,
-                        button: button,
-                        action: action
-                    )
-                }
+                // 恢复 v1.9.21 行为：显式单击绑定同样支持按住重复。
+                // 上游在绑定存在时跳过 repeat，导致“按住退格连删”失效；
+                // 是否重复由 startRepeatIfNeeded 内部守卫决定（次要动作、
+                // allowsRepeat、前台应用），绑定本身不应禁用按住重复。
+                startRepeatIfNeeded(
+                    usage: usage,
+                    button: button,
+                    action: action
+                )
             }
         }
 
