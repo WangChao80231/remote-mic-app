@@ -43,17 +43,19 @@ jobs:
 
       - name: Push artifact to build-output branch
         run: |
+          cp -R "${GITHUB_WORKSPACE}/dist/SayAll.zip" /tmp/SayAll.zip
           git config user.name "sayall-local-build"
           git config user.email "sayall-local-build@users.noreply.github.com"
           git fetch origin build-output --depth 1 || true
           if git rev-parse --verify origin/build-output >/dev/null 2>&1; then
             git checkout --detach origin/build-output
-            rm -rf ./* .github 2>/dev/null || true
+            git rm -rf . || true
+            rm -f SayAll.zip version-info.plist
           else
             git checkout --orphan build-output
             git rm -rf . || true
           fi
-          cp -R "${GITHUB_WORKSPACE}/dist/SayAll.zip" ./
+          cp /tmp/SayAll.zip ./
           cp -R "${GITHUB_WORKSPACE}/dist/SayAll.app/Contents/Info.plist" ./version-info.plist || true
           git add -A
           git commit -m "SayAll.app build from ${GITHUB_SHA}"
