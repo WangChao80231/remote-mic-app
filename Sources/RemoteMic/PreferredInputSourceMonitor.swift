@@ -22,11 +22,14 @@ final class PreferredInputSourceMonitor {
     private let installMonitor: MonitorInstaller
     private let removeMonitor: MonitorRemover
     private let logger: Logger
+    private let restoreDelay: TimeInterval
+    private let activationGraceDelay: TimeInterval
 
     private var monitor: Any?
     private var functionKeyIsPressed = false
     private var explicitVoiceSessionActivationPending = false
     private var managedInputSourceSession: ManagedInputSourceSession?
+    private var pendingRestoreWorkItem: DispatchWorkItem?
     private static let activationTimeout: TimeInterval = 0.5
     private static let activationPollInterval: TimeInterval = 0.02
 
@@ -67,7 +70,9 @@ final class PreferredInputSourceMonitor {
             }
         },
         removeMonitor: @escaping MonitorRemover = NSEvent.removeMonitor,
-        logger: @escaping Logger = AppLogger.shared.write
+        logger: @escaping Logger = AppLogger.shared.write,
+        restoreDelay: TimeInterval = 2.0,
+        activationGraceDelay: TimeInterval = 0.15
     ) {
         self.voiceTool = voiceTool
         self.prepareInputSource = prepareInputSource
@@ -77,6 +82,8 @@ final class PreferredInputSourceMonitor {
         self.installMonitor = installMonitor
         self.removeMonitor = removeMonitor
         self.logger = logger
+        self.restoreDelay = restoreDelay
+        self.activationGraceDelay = activationGraceDelay
     }
 
     func start() {
@@ -90,6 +97,7 @@ final class PreferredInputSourceMonitor {
         if !preservingExplicitVoiceSession {
             explicitVoiceSessionActivationPending = false
         }
+        cancelPendingRestore()
         finishManagedInputSourceSession(
             reason: "monitor_stop",
             owner: preservingExplicitVoiceSession ? .functionKey : nil
@@ -168,6 +176,7 @@ final class PreferredInputSourceMonitor {
         }
         guard let targetInputSourceID = selectedVoiceTool.preferredInputSourceID else { return true }
         if var session = managedInputSourceSession {
+            cancelPendingRestore()
             guard session.targetInputSourceID == targetInputSourceID else {
                 logger("VOICE INPUT session_rejected reason=target_changed")
                 return false
@@ -266,6 +275,20 @@ final class PreferredInputSourceMonitor {
         else { return false }
         session.activationPending = false
         managedInputSourceSession = session
+        // 输入源已切换，但输入法在前台应用完成“接管输入框”还需片刻；
+        // 立即注入触发键会丢（微信输入法实测），宽限后再让调用方注入。
+        if activationGraceDelay > 0, activationShouldContinue() {
+            let graceDeadline = Date().addingTimeInterval(activationGraceDelay)
+            while Date() < graceDeadline, activationShouldContinue() {
+                _ = RunLoop.main.run(
+                    mode: .common,
+                    before: min(
+                        graceDeadline,
+                        Date().addingTimeInterval(Self.activationPollInterval)
+                    )
+                )
+            }
+        }
         return true
     }
 
@@ -280,9 +303,54 @@ final class PreferredInputSourceMonitor {
                 managedInputSourceSession = session
                 return
             }
+            // 松开语音键时延迟切回：给输入法留出“停录→等最终文字→提交”的时间。
+            // 立即切回会打断提交，识别文字卡在输入法语音气泡上。
+            // 延迟期间再按语音键会复用会话（beginVoiceSession 取消本次延迟切回）。
+            if restoreDelay > 0,
+               (owner == .explicitVoice && reason == "voice_session_end")
+                || (owner == .functionKey && reason == "function_key_up") {
+                scheduleDelayedRestore(session: session, reason: reason)
+                return
+            }
         }
         managedInputSourceSession = nil
+        restoreSessionNow(session: session, reason: reason)
+    }
 
+    private func scheduleDelayedRestore(
+        session: ManagedInputSourceSession,
+        reason: String
+    ) {
+        pendingRestoreWorkItem?.cancel()
+        managedInputSourceSession = session
+        logger(
+            "VOICE INPUT source_restore_delayed delay=\(restoreDelay) reason=\(reason)"
+        )
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.pendingRestoreWorkItem = nil
+            guard let pending = self.managedInputSourceSession,
+                  pending.targetInputSourceID == session.targetInputSourceID
+            else { return }
+            self.managedInputSourceSession = nil
+            self.restoreSessionNow(session: session, reason: "\(reason)_delayed")
+        }
+        pendingRestoreWorkItem = workItem
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + restoreDelay,
+            execute: workItem
+        )
+    }
+
+    private func cancelPendingRestore() {
+        pendingRestoreWorkItem?.cancel()
+        pendingRestoreWorkItem = nil
+    }
+
+    private func restoreSessionNow(
+        session: ManagedInputSourceSession,
+        reason: String
+    ) {
         guard let previousInputSourceID = session.previousInputSourceID else { return }
         let currentSourceID = currentInputSourceID()
         guard currentSourceID == session.targetInputSourceID ||
