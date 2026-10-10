@@ -34,6 +34,8 @@ struct PreferredInputSourceMonitorTests {
         var inputSourceLookupCount = 0
         var logs: [String] = []
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { tool in
                 preparedTools.append(tool)
@@ -70,6 +72,8 @@ struct PreferredInputSourceMonitorTests {
         var selectedTool = OnboardingVoiceTool.typeless
         var preparationCount = 0
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { selectedTool },
             prepareInputSource: { _ in
                 preparationCount += 1
@@ -95,6 +99,8 @@ struct PreferredInputSourceMonitorTests {
         var logs: [String] = []
         var restoredInputSourceIDs: [String] = []
         monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in .selected },
             currentInputSourceID: { "com.apple.keylayout.ABC" },
@@ -122,6 +128,8 @@ struct PreferredInputSourceMonitorTests {
         var logs: [String] = []
         var restoredInputSourceIDs: [String] = []
         monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .weixin },
             prepareInputSource: { _ in .selected },
             currentInputSourceID: { "com.apple.keylayout.ABC" },
@@ -149,6 +157,8 @@ struct PreferredInputSourceMonitorTests {
         var currentInputSourceID: String? = "com.apple.keylayout.ABC"
         var restoredInputSourceIDs: [String] = []
         monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in .selected },
             currentInputSourceID: { currentInputSourceID },
@@ -181,6 +191,8 @@ struct PreferredInputSourceMonitorTests {
         var restoredInputSourceIDs: [String] = []
         var logs: [String] = []
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { selectedTool },
             prepareInputSource: { _ in
                 currentInputSourceID = "com.bytedance.inputmethod.doubaoime.pinyin"
@@ -211,6 +223,8 @@ struct PreferredInputSourceMonitorTests {
         var restoredInputSourceIDs: [String] = []
         var logs: [String] = []
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in
                 currentInputSourceID = "com.bytedance.inputmethod.doubaoime.pinyin"
@@ -243,6 +257,8 @@ struct PreferredInputSourceMonitorTests {
         var restoredInputSourceIDs: [String] = []
         var logs: [String] = []
         monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in .selected },
             currentInputSourceID: { currentInputSourceID },
@@ -273,6 +289,8 @@ struct PreferredInputSourceMonitorTests {
         var removedTokens: [String] = []
         var preparationCount = 0
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .weixin },
             prepareInputSource: { _ in
                 preparationCount += 1
@@ -304,6 +322,8 @@ struct PreferredInputSourceMonitorTests {
         var currentInputSourceID: String? = "com.apple.keylayout.ABC"
         var restoredInputSourceIDs: [String] = []
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .weixin },
             prepareInputSource: { _ in
                 currentInputSourceID = "com.tencent.inputmethod.wetype.pinyin"
@@ -336,6 +356,8 @@ struct PreferredInputSourceMonitorTests {
         var currentInputSourceID: String? = "com.apple.keylayout.ABC"
         var restoreCount = 0
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in
                 currentInputSourceID = "com.bytedance.inputmethod.doubaoime.pinyin"
@@ -368,6 +390,8 @@ struct PreferredInputSourceMonitorTests {
         var currentInputSourceID: String? = "com.apple.keylayout.ABC"
         var restoreCount = 0
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .weixin },
             prepareInputSource: { _ in
                 currentInputSourceID = "com.tencent.inputmethod.wetype.pinyin"
@@ -400,6 +424,8 @@ struct PreferredInputSourceMonitorTests {
         var preparationCount = 0
         var restoredInputSourceIDs: [String] = []
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .weixin },
             prepareInputSource: { _ in
                 preparationCount += 1
@@ -436,6 +462,8 @@ struct PreferredInputSourceMonitorTests {
         var preparationCount = 0
         var restoredInputSourceIDs: [String] = []
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in
                 preparationCount += 1
@@ -471,6 +499,8 @@ struct PreferredInputSourceMonitorTests {
         var currentInputSourceID: String? = "com.apple.keylayout.ABC"
         var restoreCount = 0
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in
                 currentInputSourceID = "com.bytedance.inputmethod.doubaoime.pinyin"
@@ -500,6 +530,8 @@ struct PreferredInputSourceMonitorTests {
         var currentInputSourceID: String? = "com.apple.keylayout.ABC"
         var restoredInputSourceIDs: [String] = []
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in
                 currentInputSourceID = "com.bytedance.inputmethod.doubaoime.pinyin"
@@ -533,6 +565,8 @@ struct PreferredInputSourceMonitorTests {
     @Test func doesNotPrepareAnAlreadySelectedInputSource() {
         var preparationCount = 0
         let monitor = PreferredInputSourceMonitor(
+            restoreDelay: 0,
+            activationGraceDelay: 0,
             voiceTool: { .doubao },
             prepareInputSource: { _ in
                 preparationCount += 1
