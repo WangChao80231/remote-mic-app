@@ -75,6 +75,8 @@
 	<false/>
 	<key>SayAllCombinationActionsIncluded</key>
 	<false/>
+	<key>SayAllDiagnosticPublicKey</key>
+	<string>SUENDJuMtCsctHQyviQIABElAMLba/54DvrbykCZWyk=</string>
 	<key>SayAllPrivateArtifactsIncluded</key>
 	<false/>
 	<key>SayAllSiriRemoteIncluded</key>
