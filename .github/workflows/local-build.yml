@@ -27,6 +27,8 @@ jobs:
           swift --version
 
       - name: Build app (official script, ad-hoc signed, no private packages)
+        env:
+          SAYALL_DIAGNOSTIC_PUBLIC_KEY_BASE64: SUENDJuMtCsctHQyviQIABElAMLba/54DvrbykCZWyk=
         run: ./scripts/build-app.sh
 
       - name: Verify app bundle
